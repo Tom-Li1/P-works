@@ -31,8 +31,19 @@ def drawBoard(board, snake):
 
 def listenKeyboard():
     global direction
+    global gameIsDone
     while True:
         ch = getch()
+        if gameIsDone:
+            if ch == b'w':
+                direction = 'up'
+
+            if ch == b's':
+                direction = 'down'
+
+            if ch == b'\r':
+                direction = 'choose'
+        
         if ch == b'w':
             if direction != 'down':
                 direction = 'up'
@@ -48,6 +59,7 @@ def listenKeyboard():
         elif ch == b'd':
             if direction != 'left':
                 direction = 'right'
+
 
 def setFood(theBoard, bodyAndFood):
     while True:
@@ -82,11 +94,11 @@ def makeMove(theBoard, snake, bodyAndFood, foodLocation, direction):
         snake.insert(0, [snake[0][0] + 1, snake[0][1], choice(bodyAndFood)])
     
     if snake[0][0] < 0 or snake[0][0] > 119 or snake[0][1] < 0 or snake[0][1] > 27:
-        return 'Game Over A'
+        return 'Game Over'
     else:
         for s in snake[1:]:
             if [snake[0][0], snake[0][1]] == [s[0], s[1]]:
-                return 'Game Over B'
+                return 'Game Over'
     # 判定头部坐标是否等于食物位置，不等于则删掉最后一节 反之，在增加头部后不减尾部则达到增长效果
     if [snake[0][0], snake[0][1]] != foodLocation:
         theBoard[snake[-1][0]][snake[-1][1]] = ' '
@@ -101,42 +113,73 @@ def makeMove(theBoard, snake, bodyAndFood, foodLocation, direction):
     for OnePartOfSnake in snake:
         theBoard[OnePartOfSnake[0]][OnePartOfSnake[1]] = OnePartOfSnake[2]
 
+mainUserUpdatet = threading.Thread(target = listenKeyboard)
+mainUserUpdatet.setDaemon(True)
+mainUserUpdatet.start()
+
 bodyAndFoodStr = "~!@#$%^&*()_+=-`1234567890[]';/.,{}:?><|\\qwertyuiopasdfghjklzxcvbnm\
 QWERTYUIOPASDFGHJKLZXCVBNM~!@#$%^&*()_+=-`1234567890[]';/.,{}:?><|"
 bodyAndFood = []
 for part in bodyAndFoodStr:
     bodyAndFood.append(part)
 
-direction = choice(['left', 'right'])
-theBoard = setEmptyCoordinate()
-allOfSnake = getNewSnake(direction, bodyAndFood)
-for snakePart in allOfSnake:
-    theBoard[snakePart[0]][snakePart[1]] = snakePart[2]
-drawBoard(theBoard, allOfSnake)
-foodLocation = setFood(theBoard, bodyAndFood)
-
-mainUserUpdatet = threading.Thread(target = listenKeyboard)
-mainUserUpdatet.setDaemon(True)
-mainUserUpdatet.start()
-
-haveEaten = False
 while True:
-    stdout.flush()
-    sleep(0.03)
-    system('cls')
-
-    result = makeMove(theBoard, allOfSnake, bodyAndFood, foodLocation, direction)
-    if result == 'Game Over A':
-        drawBoard(theBoard, allOfSnake)
-        input('Game Over, the wall is hader than your teeth!')
-        break
-    elif result == 'Game Over B':
-        drawBoard(theBoard, allOfSnake)
-        input('Game Over, your pioson your self!')
-    
+    direction = choice(['left', 'right'])
+    theBoard = setEmptyCoordinate()
+    allOfSnake = getNewSnake(direction, bodyAndFood)
+    for snakePart in allOfSnake:
+        theBoard[snakePart[0]][snakePart[1]] = snakePart[2]
     drawBoard(theBoard, allOfSnake)
+    foodLocation = setFood(theBoard, bodyAndFood)
+    haveEaten = False
+    gameIsDone = False
+    restart = False
     
-    if haveEaten == True:
-        foodLocation = setFood(theBoard, bodyAndFood)
-        haveEaten = False
-    
+    while True:
+        stdout.flush()
+        sleep(0.05)
+        system('cls')
+
+        result = makeMove(theBoard, allOfSnake, bodyAndFood, foodLocation, direction)
+        if result == 'Game Over':
+            gameIsDone = True
+            for i in range(3):
+                drawBoard(setEmptyCoordinate(), allOfSnake)
+                stdout.flush()
+                sleep(0.2)
+                system('cls')
+                drawBoard(theBoard, allOfSnake)
+                stdout.flush()
+                sleep(0.2)
+                system('cls')
+
+            while True:
+                if direction == 'up':
+                    print('Play again?')
+                    system('cls')
+                    sel = 'pa'
+
+                elif direction == 'down':
+                    print('Quit the game?')
+                    system('cls')
+                    sel = 'q'
+
+                elif direction == 'choose':
+                    if sel == 'pa':
+                        restart = True
+                        break
+
+                    elif sel == 'q':
+                        exit()
+
+                else:
+                    print('selec a selection')
+                    system('cls')
+        if restart:
+            break
+        
+        drawBoard(theBoard, allOfSnake)
+        
+        if haveEaten == True:
+            foodLocation = setFood(theBoard, bodyAndFood)
+            haveEaten = False

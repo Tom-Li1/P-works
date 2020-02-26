@@ -18,32 +18,28 @@ def setEmptyCoordinate():
 
 
 def drawBoard(board, snake):
-    print('=' * 120, end = '')
-
+    print('{:=^120}'.format('Score:' + str(len(snake))), end = '')
+    
     for row in range(28):
         boardRow = ''
         for column in range(120):
             boardRow += board[column][row]
         print(boardRow, end = '')
 
-    print('Score:' + str(len(snake)) + '=' * (120 -len('Score:' + str(len(snake)))), end = '')
+    print('=' * 120, end = '')
 
 
 def listenKeyboard():
     global direction
     global gameIsDone
+    global time
+    global escGame
+
     while True:
+        if gameIsDone != False:
+            exit()
+            
         ch = getch()
-        if gameIsDone:
-            if ch == b'w':
-                direction = 'up'
-
-            if ch == b's':
-                direction = 'down'
-
-            if ch == b'\r':
-                direction = 'choose'
-        
         if ch == b'w':
             if direction != 'down':
                 direction = 'up'
@@ -59,6 +55,15 @@ def listenKeyboard():
         elif ch == b'd':
             if direction != 'left':
                 direction = 'right'
+
+        elif ch == b' ':
+            if time == 0.05:
+                time = 0.01
+            else:
+                time = 0.05
+
+        elif ch == b'\x1b':
+            escGame = True
 
 
 def setFood(theBoard, bodyAndFood):
@@ -84,6 +89,8 @@ def getNewSnake(direction, bodyAndFood):
 
 def makeMove(theBoard, snake, bodyAndFood, foodLocation, direction):
     # 根据移动方向添加一个头部，原来的头部变为身体的一部分
+    global escGame
+
     if direction == 'up':
         snake.insert(0, [snake[0][0], snake[0][1] - 1, choice(bodyAndFood)])
     elif direction == 'down':
@@ -99,6 +106,8 @@ def makeMove(theBoard, snake, bodyAndFood, foodLocation, direction):
         for s in snake[1:]:
             if [snake[0][0], snake[0][1]] == [s[0], s[1]]:
                 return 'Game Over'
+    if escGame:
+        return 'Game Over'
     # 判定头部坐标是否等于食物位置，不等于则删掉最后一节 反之，在增加头部后不减尾部则达到增长效果
     if [snake[0][0], snake[0][1]] != foodLocation:
         theBoard[snake[-1][0]][snake[-1][1]] = ' '
@@ -113,17 +122,114 @@ def makeMove(theBoard, snake, bodyAndFood, foodLocation, direction):
     for OnePartOfSnake in snake:
         theBoard[OnePartOfSnake[0]][OnePartOfSnake[1]] = OnePartOfSnake[2]
 
-mainUserUpdatet = threading.Thread(target = listenKeyboard)
-mainUserUpdatet.setDaemon(True)
-mainUserUpdatet.start()
+def drawGameOverBoard(numberOfInfo):
+    global gameIsDone
+    info = [
+    'Play Again',
+    'Quit the Game',
+    '->         Play Again           ',
+    '->       Quit the Game          ',
+    'PLAY ',
+    'Quit the Game',
+    '->           PLAY               ',
+    '->       Quit the Game          ']
+    
+    if gameIsDone == True:
+        if numberOfInfo == 'pa':
+            info_1 = info[2]
+            info_2 = info[1]
 
-bodyAndFoodStr = "~!@#$%^&*()_+=-`1234567890[]';/.,{}:?><|\\qwertyuiopasdfghjklzxcvbnm\
-QWERTYUIOPASDFGHJKLZXCVBNM~!@#$%^&*()_+=-`1234567890[]';/.,{}:?><|"
-bodyAndFood = []
-for part in bodyAndFoodStr:
-    bodyAndFood.append(part)
+        elif numberOfInfo == 'q':
+            info_1 = info[0]
+            info_2 = info[3]
+
+        else:
+            info_1 = info[0]
+            info_2 = info[1]
+
+        print(r'''
+
+                                 _____   ___  ___  ___ _____   _____  _   _ ___________ 
+                                |  __ \ / _ \ |  \/  ||  ___| |  _  || | | |  ___| ___ \
+                                | |  \// /_\ \| .  . || |__   | | | || | | | |__ | |_/ /
+                                | | __ |  _  || |\/| ||  __|  | | | || | | |  __||    / 
+                                | |_\ \| | | || |  | || |___  \ \_/ /\ \_/ / |___| |\ \ 
+                                 \____/\_| |_/\_|  |_/\____/   \___/  \___/\____/\_| \_|''')
+
+    elif gameIsDone == 'Start':
+        if numberOfInfo == 'p':
+            info_1 = info[6]
+            info_2 = info[5]
+
+        elif numberOfInfo == 'q':
+            info_1 = info[4]
+            info_2 = info[7]
+
+        else:
+            info_1 = info[4]
+            info_2 = info[5]
+
+        print(r'''
+
+   $$$$$$$\              $$\                                $$$$$$\                      $$\                           
+   $$  __$$\             $$ |                              $$  __$$\                     $$ |                          
+   $$ |  $$ | $$$$$$\  $$$$$$\    $$$$$$\   $$$$$$\        $$ /  \__|$$$$$$$\   $$$$$$\  $$ |  $$\  $$$$$$\   $$$$$$\  
+   $$$$$$$  |$$  __$$\ \_$$  _|  $$  __$$\ $$  __$$\       \$$$$$$\  $$  __$$\  \____$$\ $$ | $$  |$$  __$$\ $$  __$$\ 
+   $$  __$$< $$$$$$$$ |  $$ |    $$ |  \__|$$ /  $$ |       \____$$\ $$ |  $$ | $$$$$$$ |$$$$$$  / $$$$$$$$ |$$ |  \__|
+   $$ |  $$ |$$   ____|  $$ |$$\ $$ |      $$ |  $$ |      $$\   $$ |$$ |  $$ |$$  __$$ |$$  _$$<  $$   ____|$$ |      
+   $$ |  $$ |\$$$$$$$\   \$$$$  |$$ |      \$$$$$$  |      \$$$$$$  |$$ |  $$ |\$$$$$$$ |$$ | \$$\ \$$$$$$$\ $$ |      
+   \__|  \__| \_______|   \____/ \__|       \______/        \______/ \__|  \__| \_______|\__|  \__| \_______|\__|''')
+
+    
+
+    for i in range(4):
+        print()
+
+    print(' ' * int(((120-len(info_1)) / 2)) + info_1)
+
+    print("\n\n\n\n\n\n")
+
+    print(' ' * int(((120-len(info_2)) / 2)) + info_2)
+
+    print('\n\n')
+
+    print(r'''                                Select what you want to do with 'W', 'S' and 'Enter' keys
+        W
+      A S D --- Change the direction of movement | Space --- Increase movement speed | Esc --- Quit while playing''')
+
+gameIsDone = 'Start'
+direction = choice(['left', 'right'])
+
+drawGameOverBoard('w')
+sel = 'w'
+while True:
+    ch = getch()
+    system('cls')
+    if ch == b'w':
+        drawGameOverBoard('p')
+        sel = 'p'
+    elif ch == b's':
+        drawGameOverBoard('q')
+        sel = 'q'
+    elif ch == b'\r':
+        if sel == 'p':
+            system('cls')
+            break
+        elif sel == 'q':
+            exit()
+        else:
+            drawGameOverBoard('w')
+    else:
+        drawGameOverBoard('w')
 
 while True:
+    gameIsDone = False
+    mainUserUpdatet = threading.Thread(target = listenKeyboard)
+    mainUserUpdatet.setDaemon(True)
+    mainUserUpdatet.start()
+
+    bodyAndFood = choice(['O', '0', '@', '#', '$', 'S N A K E'.split(), 'P Y T H O N'.split()])
+    escGame = False
     direction = choice(['left', 'right'])
     theBoard = setEmptyCoordinate()
     allOfSnake = getNewSnake(direction, bodyAndFood)
@@ -132,12 +238,12 @@ while True:
     drawBoard(theBoard, allOfSnake)
     foodLocation = setFood(theBoard, bodyAndFood)
     haveEaten = False
-    gameIsDone = False
     restart = False
-    
+    time = 0.05
+
     while True:
         stdout.flush()
-        sleep(0.05)
+        sleep(time)
         system('cls')
 
         result = makeMove(theBoard, allOfSnake, bodyAndFood, foodLocation, direction)
@@ -152,19 +258,23 @@ while True:
                 stdout.flush()
                 sleep(0.2)
                 system('cls')
-
+                
+                drawGameOverBoard('w')
+                sel = 'w'
+            
             while True:
-                if direction == 'up':
-                    print('Play again?')
-                    system('cls')
+                ch = getch()
+                system('cls')
+
+                if ch == b'w':
+                    drawGameOverBoard('pa')
                     sel = 'pa'
 
-                elif direction == 'down':
-                    print('Quit the game?')
-                    system('cls')
+                elif ch == b's':
+                    drawGameOverBoard('q')
                     sel = 'q'
 
-                elif direction == 'choose':
+                elif ch == b'\r':
                     if sel == 'pa':
                         restart = True
                         break
@@ -172,8 +282,11 @@ while True:
                     elif sel == 'q':
                         exit()
 
+                    else:
+                        drawGameOverBoard('w')
+
                 else:
-                    print('selec a selection')
+                    drawGameOverBoard('s')
                     system('cls')
         if restart:
             break

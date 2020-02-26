@@ -3,9 +3,9 @@ import pygame
 import sys  
 from pygame.locals import *  
   
-Snakespeed = 17  
-Window_Width = 1500  
-Window_Height = 800
+Snakespeed = 1
+Window_Width = 800  
+Window_Height =600
 Cell_Size = 20  # Width and height of the cells  
 # Ensuring that the cells fit perfectly in the window. eg if cell size was  
 # 10     and window width or windowheight were 15 only 1.5 cells would  

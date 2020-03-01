@@ -1,0 +1,1 @@
+createobject("wscript.shell").run "ClearLog.bat",0

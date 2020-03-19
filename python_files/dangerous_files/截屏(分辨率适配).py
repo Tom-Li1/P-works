@@ -1,5 +1,19 @@
 import time
-import win32gui, win32ui, win32con, win32api
+import win32ui
+from win32 import win32api, win32gui, win32print
+from win32.lib import win32con
+
+
+def get_real_resolution():
+    """获取真实的分辨率"""
+    hDC = win32gui.GetDC(0)
+    # 横向分辨率
+    w = win32print.GetDeviceCaps(hDC, win32con.DESKTOPHORZRES)
+    # 纵向分辨率
+    h = win32print.GetDeviceCaps(hDC, win32con.DESKTOPVERTRES)
+    return w, h
+
+
 
 def window_capture(filename):
     hwnd = 0  # 窗口的编号，0号表示当前活跃窗口
@@ -11,13 +25,11 @@ def window_capture(filename):
     saveDC = mfcDC.CreateCompatibleDC()
     # 创建bigmap准备保存图片
     saveBitMap = win32ui.CreateBitmap()
-    # 获取监控器信息
-    MoniterDev = win32api.EnumDisplayMonitors(None, None)
-    w = MoniterDev[0][2][2]
-    h = MoniterDev[0][2][3]
-    # print w,h　　　#图片大小
-    # 为bitmap开辟空间
-    saveBitMap.CreateCompatibleBitmap(mfcDC, win32api.GetSystemMetrics(0), win32api.GetSystemMetrics(1))
+
+    w,h = get_real_resolution()#注意这个是获取真实的屏幕分辨率
+
+    # 为bitmap开辟空间win32api.GetSystemMetrics(2880)
+    saveBitMap.CreateCompatibleBitmap(mfcDC,w,h)
     # 高度saveDC，将截图保存到saveBitmap中
     saveDC.SelectObject(saveBitMap)
     # 截取从左上角（0，0）长宽为（w，h）的图片
@@ -25,11 +37,7 @@ def window_capture(filename):
     saveBitMap.SaveBitmapFile(saveDC, filename)
 
 
-beg = time.time()
-for i in range(10):
-    window_capture("haha.jpg")
-end = time.time()
-print(end - beg)
-print(win32api.GetSystemMetrics(0), win32api.GetSystemMetrics(1))
+
+window_capture("haha.jpg")
 
 input()

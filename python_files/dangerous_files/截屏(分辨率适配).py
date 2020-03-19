@@ -2,7 +2,7 @@ import time
 import win32ui
 from win32 import win32api, win32gui, win32print
 from win32.lib import win32con
-
+import cv2
 
 def get_real_resolution():
     """获取真实的分辨率"""
@@ -39,5 +39,9 @@ def window_capture(filename):
 
 
 window_capture("haha.jpg")
+img = cv2.imread('haha.jpg',1)
+#对于jpg文件的压缩，第三个参数是压缩质量
+cv2.imwrite('haha1.jpg',img,[cv2.IMWRITE_JPEG_QUALITY,20])
+
 
 input()

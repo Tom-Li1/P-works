@@ -1,6 +1,7 @@
 import os
 import time
 from winsound import Beep
+r"""
 string = r'''
                                                         _,.-------.,_
                                                     ,;~'             '~;,
@@ -84,6 +85,7 @@ stri = stri.replace('¶', 'X').replace('´', ' ')
 print(stri)
 Beep(2000,5)
 input()
+"""
 logo = r'''
            ,.-----.,_
         ,-~           ~-.
@@ -134,12 +136,10 @@ logo_3 = r'''
 os.system('cls')
 while True:
 	print(logo)
-	Beep(1700, 1)
-	time.sleep(1)
+	time.sleep(0.5)
 	os.system('cls')
 	print(logo_3)
-	Beep(1700, 1)
-	time.sleep(1)
+	time.sleep(0.5)
 	os.system('cls')
 
 

@@ -1,0 +1,3 @@
+root = Tk()
+root.attributes("-fullscreen", true)
+全屏显示tkinter界面

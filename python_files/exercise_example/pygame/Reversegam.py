@@ -46,7 +46,7 @@ def isValidMove(board, tile, xstart, ystart):
 					y -= ydirection
 					if x == xstart and y == ystart:
 						break
-					tilesToFlip.append([x], [y])
+					tilesToFlip.append([x, y])
 
 	if len(tilesToFlip) == 0:
 		return False
@@ -60,7 +60,7 @@ def getBoardWithValidMoves(board, tile):
 	boardCopy = getBoardCopy(board)
 	for x, y in getValidMoves(boardCopy, tile):
 		boardCopy[x][y] = '.'
-		return boardCopy
+	return boardCopy
 
 def getValidMoves(board, tile):
 	validMoves = []
@@ -105,7 +105,7 @@ def makeMove(board, tile, xstart, ystart):
 	if tilesToFlip == False:
 		return False
 
-	board[xstart][ystart] == tile
+	board[xstart][ystart] = tile
 	for x, y in tilesToFlip:
 		board[x][y] = tile
 
@@ -133,7 +133,7 @@ def getPlayerMove(board, playerTile):
 
 		if len(move) == 2 and move[0] in DIGITS1TO8 and move[1] in DIGITS1TO8:
 			x = int(move[0]) - 1
-			y == int(move[1]) - 1
+			y = int(move[1]) - 1
 			if isValidMove(board, playerTile, x, y) == False:
 				continue
 			else:
@@ -142,6 +142,8 @@ def getPlayerMove(board, playerTile):
 		else:
 			print('That is not a valid move. Enter the column (1-8) and the row (1-8).')
 			print('For example, 81 will move on the top-right corner.')
+
+	return [x, y]
 
 def getComputerMove(board, computerTile):
 	possibleMoves = getValidMoves(board, computerTile)
@@ -153,7 +155,7 @@ def getComputerMove(board, computerTile):
 
 	bestScore = -1
 	for x, y in possibleMoves:
-		boardCopy == getBoardCopy(board)
+		boardCopy = getBoardCopy(board)
 		makeMove(boardCopy, computerTile, x, y)
 		score = getScoreOfBoard(boardCopy)[computerTile]
 		if score > bestScore:

@@ -85,7 +85,7 @@ def getScoreOfBoard(board):
 def enterPlayerTile():
 	tile = ''
 	while not (tile == 'X' or tile == 'O'):
-		print('Do you want to be X or O?')
+		print('你希望使用 X 还是 O 作为你的棋子？')
 		tile = input('>>>').upper()
 
 	if tile == 'X':
@@ -126,7 +126,7 @@ def isOnCorner(x, y):
 def getPlayerMove(board, playerTile):
 	DIGITS1TO8 = '1 2 3 4 5 6 7 8'.split(' ')
 	while True:
-		print('Enter your move, "quit" or "hints" to toggle hints.')
+		print('输入你要放置棋子的位置，输入"quit"退出或输入"hints"来显示可以下棋的位置')
 		move = input('>>>').lower()
 		if move == 'hints' or move == 'quit':
 			return move
@@ -140,8 +140,8 @@ def getPlayerMove(board, playerTile):
 				break
 
 		else:
-			print('That is not a valid move. Enter the column (1-8) and the row (1-8).')
-			print('For example, 81 will move on the top-right corner.')
+			print('此位置不能下棋，输入横坐标（1-8）和纵坐标（1-8）')
+			print('比如输入“81”将会在右上角下棋')
 
 	return [x, y]
 
@@ -166,12 +166,12 @@ def getComputerMove(board, computerTile):
 
 def printScore(board, playerTile, computerTile):
 	scores = getScoreOfBoard(board)
-	print('You: %s points. Computer: %s points.' % (scores[playerTile], scores[computerTile]))
+	print('你： %s 分。 AI: %s 分。' % (scores[playerTile], scores[computerTile]))
 
 def playGame(playerTile, computerTile):
 	showHints = False
 	turn = whoGoesFirst()
-	print('The %s will goes first.' % (turn))
+	print('本局%s先走第一步。' % (turn))
 	board = getNewBoard()
 
 	board[3][3] = 'X'
@@ -197,7 +197,7 @@ def playGame(playerTile, computerTile):
 
 				move = getPlayerMove(board, playerTile)
 				if move == 'quit':
-					print('Thanks for playing.')
+					print('感谢游玩。')
 					sys.exit()
 				elif move == 'hints':
 					showHints = not showHints
@@ -211,29 +211,29 @@ def playGame(playerTile, computerTile):
 				drawBoard(board)
 				printScore(board, playerTile, computerTile)
 
-				input('Please press "enter" to see computer\' move.')
+				input('按下回车键使AI下棋。')
 				move = getComputerMove(board, computerTile)
 				makeMove(board, computerTile, move[0], move[1])
 			turn = 'player'
 
-print('Welcome to Reversegam!')
+print('Reversegam! v0.0.1 游侠汉化组汉化')
 
 playerTile, computerTile = enterPlayerTile()
 while True:
 	finalBoard = playGame(playerTile, computerTile)
 	drawBoard(finalBoard)
 	scores = getScoreOfBoard(finalBoard)
-	print('X scored %s points and O scored %s points.' % (scores['X'], scores['O']))
+	print('X得分%s分，O得分%s分。' % (scores['X'], scores['O']))
 	if scores[playerTile] > scores[computerTile]:
-		print('You beat the computer by %s points! Congratulations!' % (scores[playerTile] - scores[computerTile]))
+		print('你以%s分的战绩战胜了AI，牛逼者！' % (scores[playerTile] - scores[computerTile]))
 
 	elif scores[playerTile] < scores[computerTile]:
-		print('You lost. The computer beat you by %s points.' % (scores[computerTile] - scores[playerTile]))
+		print('AI以%s的战绩打败了你......' % (scores[computerTile] - scores[playerTile]))
 
 	else:
-		print('The game was a tie')
+		print('好像平局了。')
 
-	print('Do you want to play again? (yes/no)')
+	print('再来一局么？(yes/no)')
 	if not input('>>>').lower().startswith('y'):
-		print('Thanks for playing.')
+		print('感谢游玩。')
 		break

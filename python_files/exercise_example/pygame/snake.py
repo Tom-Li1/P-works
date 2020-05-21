@@ -3,7 +3,7 @@ import pygame
 import sys  
 from pygame.locals import *  
   
-Snakespeed = 1
+Snakespeed = 10
 Window_Width = 800  
 Window_Height =600
 Cell_Size = 20  # Width and height of the cells  

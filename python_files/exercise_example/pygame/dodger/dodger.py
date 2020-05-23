@@ -1,10 +1,11 @@
 import pygame, random, sys
 from pygame.locals import *
 
-WINDOWWIDTH = 600
-WINDOWHEIGHT = 600
+WINDOWWIDTH = 480
+WINDOWHEIGHT = 700
 TEXTCOLOR = (0, 0, 0)
-BACKGROUNDCOLOR = (255, 255, 255)
+#BACKGROUNDCOLOR = (255, 255, 255)
+BACKGROUNDCOLOR = pygame.image.load('background.png')
 FPS = 60
 BADDIEMINSIZE = 10
 BADDIEMAXSIZE = 40
@@ -50,10 +51,11 @@ gameOverSound = pygame.mixer.Sound('gameover.wav')
 pygame.mixer.music.load('background.mid')
 
 playerImage = pygame.image.load('player.png')
+playerImage = pygame.transform.scale(playerImage, (40, 40))
 playerRect = playerImage.get_rect()
 baddieImage = pygame.image.load('baddie.png')
 
-windowSurface.fill(BACKGROUNDCOLOR)
+windowSurface.blit(BACKGROUNDCOLOR, (0, 0))
 drawText('Dodger', font, windowSurface, (WINDOWWIDTH / 3), (WINDOWHEIGHT / 3))
 drawText('Press a key to start.', font, windowSurface, (WINDOWWIDTH / 3) - 30, (WINDOWHEIGHT / 30) + 50)
 pygame.display.update()
@@ -147,7 +149,7 @@ while True:
 			if b['rect'].top > WINDOWHEIGHT:
 				baddies.remove(b)
 
-		windowSurface.fill(BACKGROUNDCOLOR)
+		windowSurface.blit(BACKGROUNDCOLOR, (0, 0))
 
 		drawText('Score: %s' % (score), font, windowSurface, 10, 0)
 		drawText('Top Score: %s' % (topScore), font, windowSurface, 10, 40)

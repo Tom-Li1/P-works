@@ -1,8 +1,8 @@
 import pygame, random, sys
 from pygame.locals import *
 
-WINDOWWIDTH = 1920
-WINDOWHEIGHT = 1080
+WINDOWWIDTH = 500
+WINDOWHEIGHT = 800
 TEXTCOLOR = (0, 0, 0)
 #BACKGROUNDCOLOR = (255, 255, 255)
 BACKGROUNDCOLOR = pygame.image.load('background.png')
@@ -12,7 +12,7 @@ BADDIEMINSIZE = 10
 BADDIEMAXSIZE = 40
 BADDIEMINSPEED = 5
 BADDIEMAXSPEED = 10
-ADDNEWBADDIERATE = 1
+ADDNEWBADDIERATE = 5
 PLAYERMOVERATE = 5
 
 def terminate():
@@ -43,7 +43,7 @@ def drawText(text, font, surface, x, y):
 
 pygame.init()
 mianClock = pygame.time.Clock()
-windowSurface = pygame.display.set_mode((WINDOWWIDTH, WINDOWHEIGHT), FULLSCREEN, 32)
+windowSurface = pygame.display.set_mode((WINDOWWIDTH, WINDOWHEIGHT), 0, 32)
 pygame.display.set_caption('Dodger')
 
 font = pygame.font.SysFont('System', 48)

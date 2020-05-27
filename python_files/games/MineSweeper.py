@@ -246,10 +246,7 @@ def isGameWin(theBoard, mines):
     return True
 
 def showHowToPlay():
-    printOneByOne("无聊的作者还原了WindowsXP上的扫雷，为了凸显创意他便将DOS当作游戏界面了。\n\
-游戏的规则并没有改变，但是还有许多不同点，这就是说明的用处所在了：\n\
-首先你不能通过鼠标点击来表示你下一步要检查哪个格子，你只能输入格子的坐标来表示他的位置。\n\
-如果你想要标记雷点，呢么需要在坐标后面加上一个空格和'X'。先展示一下游戏界面方便举个例子：", 0.03)
+    printOneByOne("输入坐标来表示格子的位置，坐标加X表示标记格子。\n", 0.03)
 
     print('''
                                 1         2         3
@@ -263,33 +260,11 @@ def showHowToPlay():
                                 1         2         3
                                                                    ''')
     
-    printOneByOne("如果你想要翻开'!'所在个格子，那你应该输入'3 2'，因为它上下所对的数字为3，左右所对的数字为2。\n\
-如果你要将'?'所在的格子标记为地雷，那你应输入'14 1 X'，因为上下对的数字为14而左右为1，最后加X为表示表记地雷。\n\
-最后加上'-'则表示你要取消标记。游戏规则没有改变，和普通的扫雷是一样的。你可以在游戏中途输入'quit'退出。\n\
-当你翻开所有不是地雷的格子后，你就赢了这局游戏。当你翻开地雷所在的盖子时，你就输掉了。\n\
-随后会展示所有地雷的位置，在界面上表示为'M'，你已经标记到到的地雷会表示为'√'。\n", 0.03)
+    printOneByOne("输入'3 2'可翻开！所在位置。输入'14 1 X'可将？所在位置标记地雷\n\
+最后加'-'可删除标记。输入'quit'退出。\n\
+游戏结束后，'M'表示未被发现的地雷，'√'则代表已被发现的。\n", 0.03)
 
-    input("当你读完后按回车'enter'键继续......")
-
-    printOneByOne("\n每当你输入完一个格子的坐标后按下回车，如果没有'X'或'-'则表示你要翻开这个格子。\n\
-随后这个格子可能会变成一个数字，或者是一块区域变成空的，亦或你脸黑第一次就翻到地雷了......\n\
-如果变成了一个数字，那它就表示围着这个数字的八个格子里雷的数量，比如：你翻开一个格子，\n\
-随后它变成了'1'，则表示它周围八个格子里有一个地雷，变成'2'或者'3'等等数字都是以此类推。\n\
-如果你翻完一个格子后它变成空白，或者它周围一片区域也变成空白了，就像下面的例子一样，\n\
-那就代表这这个格子的周围一个地雷都没有，此时电脑会帮你翻开周围的八个格子，这就是为啥有时候空了一片。", 0.03)
-
-    print('''
-                                1         2         3
-                      012345678901234567890123456789012
-                    0 -------------------11------------ 0
-                    1 ------1-----------1  1----------- 1
-                    2 ------------------1   1---------- 2
-                    3 ----3-------------21111---------- 3
-                    4 --------------------------------- 4
-                      012345678901234567890123456789012
-                                1         2         3
-                                                                   ''')
-    input("教程到此结束，按下回车'enter'键开始游戏。\n")
+    input("按'enter'键开始\n")
 
 sleep(0.8)
 print(r'''
@@ -310,7 +285,7 @@ print(r'''
 sleep(1)
 printOneByOne('in the DOS! v1.0.1', 0.03)
 sleep(0.8)
-printOneByOne('\n需要看一下说明吗？（如果这是你第一次尝试它，那作者认为你需要看一看）', 0.03)
+printOneByOne('\n展示说明？（y/n）', 0.03)
 
 while True:
     showOrNot = input('(yes/no)>>>')
@@ -319,17 +294,17 @@ while True:
         system('cls')
         break
     elif showOrNot.lower().startswith('n'):
-        printOneByOne('那你可真聪明')
+        printOneByOne('NB')
         sleep(1)
         system('cls')
         break
     else:
-        printOneByOne('啥意思？')
+        printOneByOne('？？？')
         continue
 
     
 while True:
-    printOneByOne('你要在1200个格子里埋多少颗雷？')
+    printOneByOne('提供地雷数量')
     while True:
         MN = input('>>>')
         if MN.isdigit() and int(MN) <= 1200:
@@ -337,18 +312,18 @@ while True:
             system('cls')
             break
         else:
-            printOneByOne("你填写的内容并不符合要求，一共1200个格子......")
+            printOneByOne("数值范围：0-1200的整数")
 
     theBoard = getNewBoard()
     drawBoard(theBoard)
     if showOrNot.lower().startswith('n'):
-        printOneByOne('懵逼了吧')
+        printOneByOne('SB')
     
     while True:
         if isGameWin(theBoard, mines):
-            printOneByOne("你 赢 了!")
-            printOneByOne("所有未部署地雷的盖子都被翻开 ")
-            if input('再来一局吗(yes/no)？\n>>>').lower().startswith('y'):
+            printOneByOne("你赢")
+            printOneByOne("NB ")
+            if input('重新开始(yes/no)？\n>>>').lower().startswith('y'):
                     showOrNot = 'yes'
                     system('cls')
                     break
@@ -358,11 +333,11 @@ while True:
         moveList = getPlayerMove(theBoard)
         result = makeMove(moveList[0], moveList[1], mines, mark = moveList[2])
         if result:
-            if '游戏结束' in result:
+            if 'GAME OVER' in result:
                 system('cls')
                 drawMinesBoard(theBoard, mines)
                 printOneByOne(result)
-                if input('再来一局吗(yes/no)？\n>>>').lower().startswith('y'):
+                if input('重来(yes/no)？\n>>>').lower().startswith('y'):
                     showOrNot = 'yes'                    
                     system('cls')
                     break

@@ -38,6 +38,7 @@ def start_game(stats, aliens, bullets, ship):
 
 def check_play_button(ai_settings, screen, stats, play_button, ship, aliens, bullets, mouse_x, mouse_y):
 	if play_button.rect.collidepoint(mouse_x, mouse_y) and not stats.game_active:
+		ai_settings.initialize_dynamic_settings()
 		start_game(stats, aliens, bullets, ship)
 
 def check_events(ai_settings, screen, stats, play_button, ship, aliens, bullets):
@@ -78,6 +79,7 @@ def check_bullet_alien_collision(bullets, aliens, screen, ship, ai_settings):
 	if len(aliens) == 0:
 		bullets.empty()
 		create_fleet(ai_settings, screen, ship, aliens)
+		ai_settings.increase_speed()
 
 def get_number_aliens_x(ai_settings, alien_width):
 	available_space_x = ai_settings.screen_width - (2 * alien_width)

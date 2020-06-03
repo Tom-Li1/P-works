@@ -26,16 +26,58 @@ class AutomaticScolder():
 		self.k.release_key(self.k.control_key)
 		self.k.tap_key(self.k.enter_key)
 
-auto_scolder = AutomaticScolder()
+# Get name of the poor baby who will be scold.
+def getName():
+	print('Who are you going to scold?')
+	while True:
+		name = input('>>>')
+		if name:
+			return name
 
-print('Who are you going to scold?')
-while True:
-	name = input('>>>')
-	if name:
-		auto_scolder.words['name'].append(name)
-		break
-		
-print("Program scolding, click chat app's window to start...")
-while True:
-	auto_scolder.sendSentence()
+# Judge whether the string is a number.
+def isDigits(digits):
+	if digits == '':
+		return False
+	for i in digits:
+		if i not in '1234567890':
+			return False
+	return True
+
+# Get number of message sending.
+def getScoldTime():
+	print('How many message should I scold? (Must be an integer)')
+	while True:
+		msg_num = input('>>>')
+		if msg_num == '' or isDigits(msg_num):
+			return msg_num
+
+def getIntervalTime():
+	print('How long should be the interval between each message? (Must be an integer)')
+	while True:
+		interval_time = input('>>>')
+		if isDigits(interval_time):
+			return int(interval_time)
+
+# Main part of all the project.
+def main(auto_scolder):
+	auto_scolder.words['name'] = getName()
+	msg_num = getScoldTime()
+	interval_time = getIntervalTime()
+
+	print("Program will start to scoding in 5 seconds, click the chatting app's window now...")
+	time.sleep(5)
+	if msg_num == '':
+		while True:
+			auto_scolder.sendSentence()
+			time.sleep(interval_time)
+	else:
+		for i in range(int(msg_num)):
+			auto_scolder.sendSentence()
+			time.sleep(interval_time)
+
+	print('Scolding finished.\n')
 	time.sleep(1)
+
+auto_scolder = AutomaticScolder()
+while True:
+	main(auto_scolder)

@@ -23,9 +23,11 @@ class AutomaticScolder():
 		pyperclip.copy(self.buildUpSentence())
 		self.k.press_key(self.k.control_key) 
 		self.k.tap_key('V')
+		time.sleep(0.1)
 		self.k.release_key(self.k.control_key)
+		time.sleep(0.1)
 		self.k.tap_key(self.k.enter_key)
-
+		
 # Get name of the poor baby who will be scold.
 def getName():
 	print('Who are you going to scold?')
@@ -60,7 +62,7 @@ def getIntervalTime():
 
 # Main part of all the project.
 def main(auto_scolder):
-	auto_scolder.words['name'] = getName()
+	auto_scolder.words['name'] = [getName()]
 	msg_num = getScoldTime()
 	interval_time = getIntervalTime()
 

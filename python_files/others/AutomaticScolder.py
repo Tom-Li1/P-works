@@ -14,10 +14,10 @@ class AutomaticScolder():
 			}
 
 	def buildUpSentence(self):
-		word_list = []
-		for words_key in self.words.keys():	
-			word_list.append(random.choice(self.words[words_key]))
-		return "{0}在{1}{2}{3}".format(word_list[0], word_list[1], word_list[2], word_list[3])
+		word_list = [] # Be used to temporary store words for one sentence.
+		for v in self.words.values():
+			word_list.append(random.choice(v)) # random choice a word from the words dic and append into word list.
+		return "{0}在{1}{2}{3}".format(word_list[0], word_list[1], word_list[2], word_list[3]) # return the sentence be formated.
 
 	def sendSentence(self):
 		pyperclip.copy(self.buildUpSentence())

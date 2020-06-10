@@ -1,15 +1,16 @@
 import getpass
 import time
-import requests
+from urllib import request
 import sys
 import random
 import os
 
 def internet_or_not():
     try:
-        html = requests.get("http://www.baidu.com",timeout=2)
+        html = request.get("http://www.baidu.com",timeout=2)
     
-    except:
+    except Exception as e:
+        print(repr(e))
         return False
     
     return True

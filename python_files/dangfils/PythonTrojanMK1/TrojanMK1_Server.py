@@ -6,6 +6,8 @@ import time
 import uuid
 import sys
 import threading
+# 占用资源：所在目录下创建UserData.json用于储存用户数据
+# 端口使用： 5681-udp-心跳包收发
 
 # 用于编辑和管理用户数据库文件的类
 class UserDataEditor(): # 参数包含文件名与路径 可自定义 默认当前所在路径
@@ -103,7 +105,7 @@ def listen_heartbeat(): # 子线程 心跳包接收以及接入控制用户函�
 	global listening
 
 	print('[INFO] 心跳包接收线程初始化......')
-	HOST_PORT = (127.0.0.1, 5681)
+	HOST_PORT = ('127.0.0.1', 5681)
 	BUFSIZE = 1024
 	hb_sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 	hb_sock.bind(HOST_PORT)
@@ -111,21 +113,30 @@ def listen_heartbeat(): # 子线程 心跳包接收以及接入控制用户函�
 	print('[INFO] 心跳包接收线程初始化完毕 进入接收循环')
 
 	while listening:
-		data, addr = server.recvfrom(BUFSIZE)
+		data, addr = hb_sock.recvfrom(BUFSIZE)
 		if data.decode('utf-8') == ctrl_user_ID:
-			server.sendto('ctrl'.endoce('utf-8'), addr)
+			hb_sock.sendto('c'.encode('utf-8'), addr)
 			print('[INFO] 已向ID为', ctrl_user_ID, '的用户发起接入请求')
-			ctrl_user_ID = 'None'
+			ctrl_user_ID = None
 		else:
-			server.sendto('hb recved'.endoce('utf-8'), addr)
+			hb_sock.sendto('h'.encode('utf-8'), addr)
 		ude.loadUserData()
 		ude.addUser(user_ID = data.decode('utf-8'))
+		ude.writeUserData()
+		ude.showDataContent()
 
-'''
-heartBeatThread = threading.Thread(target=heart_listen)
+	hb_sock.close()
+
+listening = True
+ctrl_user_ID = None
+heartBeatThread = threading.Thread(target=listen_heartbeat)
 heartBeatThread.setDaemon(True)
 heartBeatThread.start()
-'''
-listen_heartbeat()
 
-
+while True:
+	ins = input('>>>')
+	if ins == 'quit()':
+		listening = False
+		sys.exit()
+	else:
+		ctrl_user_ID = ins

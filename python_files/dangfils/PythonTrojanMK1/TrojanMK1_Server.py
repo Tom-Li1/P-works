@@ -5,9 +5,10 @@ import traceback
 import time
 import uuid
 import sys
+import threading
 
 # 用于编辑和管理用户数据库文件的类
-class UserData(): # 参数包含文件名与路径 可自定义 默认当前所在路径
+class UserDataEditor(): # 参数包含文件名与路径 可自定义 默认当前所在路径
 	def __init__(self, file_path = os.path.dirname(__file__), file_name = r'\UserData.json'):
 		print('[INFO] 服务器端用户数据库管理类初始化......')
 		self.user_data = {} # {'UUID':['Time', 'Nick name'], '5d8b66df-abc31b':['2020-07-21 13:11:24', 'Peter Duan']}
@@ -37,7 +38,7 @@ class UserData(): # 参数包含文件名与路径 可自定义 默认当前所�
 			if t1me == '':
 				t1me = time.strftime('%Y-%m-%d %H:%M:%S',time.localtime(time.time()))
 			self.user_data[user_ID] = [t1me, 'None']
-			print('[INFO] 已将ID为', user_ID, '的用户添加至内存中的用户数据结构')
+			print('[INFO] 已将ID为', user_ID, '的用户添加或刷新至内存中的用户数据结构')
 		except:
 			print('[ERRO] 添加用户至数据结构失败 反馈如下')
 			traceback.print_exc()
@@ -97,5 +98,34 @@ class UserData(): # 参数包含文件名与路径 可自定义 默认当前所�
 			print('[ERRO] 设置备注失败 反馈如下')
 			traceback.print_exc()
 
-while True:
-	exec(input('>>>'))
+def listen_heartbeat(): # 子线程 心跳包接收以及接入控制用户函数
+	global ctrl_user_ID
+	global listening
+
+	print('[INFO] 心跳包接收线程初始化......')
+	HOST_PORT = (127.0.0.1, 5681)
+	BUFSIZE = 1024
+	hb_sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+	hb_sock.bind(HOST_PORT)
+	ude = UserDataEditor()
+	print('[INFO] 心跳包接收线程初始化完毕 进入接收循环')
+
+	while listening:
+		data, addr = server.recvfrom(BUFSIZE)
+		if data.decode('utf-8') == ctrl_user_ID:
+			server.sendto('ctrl'.endoce('utf-8'), addr)
+			print('[INFO] 已向ID为', ctrl_user_ID, '的用户发起接入请求')
+			ctrl_user_ID = 'None'
+		else:
+			server.sendto('hb recved'.endoce('utf-8'), addr)
+		ude.loadUserData()
+		ude.addUser(user_ID = data.decode('utf-8'))
+
+'''
+heartBeatThread = threading.Thread(target=heart_listen)
+heartBeatThread.setDaemon(True)
+heartBeatThread.start()
+'''
+listen_heartbeat()
+
+

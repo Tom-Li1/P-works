@@ -1,0 +1,13 @@
+import os
+print('os.getcwd() >', os.getcwd())
+input()
+print("os.path.abspath('.') >", os.path.abspath('.'))
+input()
+print('__file__ >', __file__)
+input()
+print("os.path.abspath(__file__) >", os.path.abspath(__file__))
+input()
+print("os.path.dirname(os.path.abspath(__file__)) >", os.path.dirname(os.path.abspath(__file__)))
+input()
+print("os.path.dirname(__file__) >", os.path.dirname(__file__))
+input()

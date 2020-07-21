@@ -3,6 +3,8 @@ import os
 import json
 import traceback
 import time
+import uuid
+import sys
 
 # 用于编辑和管理用户数据库文件的类
 class UserData(): # 参数包含文件名与路径 可自定义 默认当前所在路径
@@ -29,33 +31,37 @@ class UserData(): # 参数包含文件名与路径 可自定义 默认当前所�
 			traceback.print_exc()
 
 
-	def addUser(self, user_ID, time): # 向内存中的数据结构添加用户 不写入文件
+	def addUser(self, user_ID, t1me = ''):
+		# 向内存中的数据结构添加用户 不写入文件
 		try:
-			self.user_data[user_ID] = [time, 'None']
-			print('[INFO] 已将ID为', user_ID, '的用户添加至数据库')
+			if t1me == '':
+				t1me = time.strftime('%Y-%m-%d %H:%M:%S',time.localtime(time.time()))
+			self.user_data[user_ID] = [t1me, 'None']
+			print('[INFO] 已将ID为', user_ID, '的用户添加至内存中的用户数据结构')
 		except:
-			print('[ERRO] 添加用户至数据库失败 反馈如下')
+			print('[ERRO] 添加用户至数据结构失败 反馈如下')
 			traceback.print_exc()
 
 	def removeUser(self, user_ID): # 从内存中的数据结构移除用户 不写入文件
 		try:
 			if user_ID not in self.user_data:
-				print('[ERRO] 删除用户失败 数据库中无此ID的用户')
+				print('[ERRO] 删除用户失败 数据结构中无此ID的用户')
 			else:
 				del self.user_data[user_ID]
-				print('[INFO] 已将ID为', user_ID, '的用户移出数据库')
+				print('[INFO] 已将ID为', user_ID, '的用户移出数据结构')
 		except:
 			print('[ERRO] 移除用户失败 反馈如下')
 			traceback.print_exc()
 
-	def resetFile(self): # 打开文件 清空用户数据 关闭文件
+	def resetData(self): # 打开文件 清空用户数据 关闭文件
 		try:
 			with open(self.file_path + self.file_name, 'w') as data_file:
 				json.dump({}, data_file)
 				data_file.close()
-			print('[INFO] 用户数据库已清空')
+				self.user_data = {}
+			print('[INFO] 用户数据库文件与内存数据结构已清空')
 		except:
-			print('[ERRO] 清空用户数据库失败 反馈如下')
+			print('[ERRO] 清空用户数据失败 反馈如下')
 			traceback.print_exc()
 
 	def writeUserData(self): # 打开文件 将当前内存中的数据结构写入文件 关闭文件
@@ -63,17 +69,33 @@ class UserData(): # 参数包含文件名与路径 可自定义 默认当前所�
 			with open(self.file_path + self.file_name, 'w') as data_file:
 				json.dump(self.user_data, data_file)
 				data_file.close()
-			print('[INFO] 用户数据已写入')
+			print('[INFO] 用户数据结构已写入文件')
 		except:
-			print('[ERRO] 写入用户数据失败 反馈如下')
+			print('[ERRO] 写入用户数据至文件失败 反馈如下')
 			traceback.print_exc()
 
 	def showDataContent(self): # 格式化输出内存中用户数据结构的内容至命令行 不读取文件
-		print('{:=^80}'.format('用户信息表单'))
+		print('{:=^74}'.format('用户信息表单'))
 		if self.user_data == {}:
-			print('\n{:^80}\n').format('数据库未储存任何用户信息')
+			print('\n{:^65}\n'.format('数据结构中未储存任何用户信息'))
 		else:
-			print('{0:^40}{1:^25}{2:^15}'.format('用户ID', '最近接收心跳包的时间', '备注'))
+			print('{0:^40}{1:^25}{2:^15}'.format("User's UUID", 'Last Online Time', 'Nickname'))
 			for uuid, data in self.user_data.items():
 				print('{0:^40}{1:^25}{2:^15}'.format(uuid, data[0], data[1]))
 		print('{:=^80}'.format(''))
+
+	def setUserNickname(self, user_ID, nickname):
+		try:
+			if user_ID not in self.user_data:
+				print('[ERRO] 设置备注失败 数据结构中无此ID的用户')
+			elif len(nickname) > 15 or len(nickname) == 0:
+				print('[ERRO] 设置备注失败 用户备注需要1-15个字符')
+			else:
+				self.user_data[user_ID][1] = nickname
+				print('[INFO] 已将ID为', user_ID, '的用户备注设置为', nickname)
+		except:
+			print('[ERRO] 设置备注失败 反馈如下')
+			traceback.print_exc()
+
+while True:
+	exec(input('>>>'))

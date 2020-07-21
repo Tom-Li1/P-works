@@ -59,25 +59,22 @@ class HeartBeatController(): # 用于接收/回复/辨别来自服务端心跳�
 	def sendHb(self):
 		try:
 			self.hb_sock.sendto(self.user_ID.encode("utf-8"), self.HOST_PORT)
-			print('[INFO] 心跳包发送')
-		except:
-			print('[ERRO] 心跳包发送失败 反馈如下')
-			traceback.print_exc()
+			print('[INFO] 已向服务器发送心跳包')
+		except Exception as e:
+			print('[ERRO] 心跳包发送失败', e)
+
 
 	def recvHb(self):
 		try:
 			serv_msg, _ = self.hb_sock.recvfrom(self.BUFSIZE)
-			print('[INFO] 心跳包接收')
+			print('[INFO] 收到服务器响应')
 			if serv_msg.decode('utf-8') == "c":
-				print('[INFO] 收到服务器接受请求')
+				print('[INFO] 收到服务器控制请求')
 				return True
 			else:
 				return False
-		except ConnectionResetError:
-			print('[ERRO] 心跳包发送失败 服务器已关闭')
-
-		except  as e:
-			print('[ERRO] 心跳包发送失败', e)
+		except Exception as e:
+			print('[ERRO] 服务器未响应', e)
 
 
 	def shutDown(self):

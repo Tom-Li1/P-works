@@ -125,36 +125,37 @@ def listen_heartbeat(): # 子线程 心跳包接收以及接入控制用户函�
 	bufsize = 1024
 	hb_sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 	hb_sock.bind(host_port)
-	hb_sock.settimeout(3)
+	hb_sock.settimeout(3) # 三秒内未任何心跳包则回到循环首部
 	print('[INFO] 心跳包接收线程初始化完毕 进入接收循环')
 
-	while LISTENING:
+	while LISTENING: # 心跳包监听循环
 		try:
 			data, addr = hb_sock.recvfrom(bufsize)
+			data = data.decode('utf-8')
 		except:
 			continue
-		if data.decode('utf-8') == CTRL_USER_ID:
+		if data == CTRL_USER_ID: # 判定收到的ID是否为将要抓取的用户
 			try:
-				hb_sock.sendto('c'.encode('utf-8'), addr)
+				hb_sock.sendto('c'.encode('utf-8'), addr) # 发送 c 代表控制请求
 				print('[INFO] 已向ID为', CTRL_USER_ID, '的用户发起控制请求')
-				CTRL_USER_ID = None
+				CTRL_USER_ID = None # 发起请求并重置将要抓取的ID
 			except Exception as e:
 				print('[ERRO] 发起控制请求失败', e)
-		elif data.decode('utf-8')[-1] == 'R':
-			print('[INFO] 收到ID为', data.decode('utf-8')[:-1], '的控制请求许可')
+		elif data[-1] == 'R': # 结尾为 R 的用户ID为此用户的设备接入控制许可
+			print('[INFO] 收到ID为', data[:-1], '的控制请求许可')
 		else:
 			try:
-				hb_sock.sendto('h'.encode('utf-8'), addr)
+				hb_sock.sendto('h'.encode('utf-8'), addr) # 发送 h 代表普通的来自服务器的响应
 			except Exception as e:
 				print('[ERRO] 回复心跳包失败', e)
-
-		UDE.addUser(user_ID = data.decode('utf-8'))
-		UDE.writeUserData()
+		if data[-1] != 'R': # 结尾为R的ID为接入控制许可 不需要添加至用户数据结构
+			UDE.addUser(user_ID = data)
+			UDE.writeUserData()
 
 	hb_sock.close()
 	print('[INFO] 心跳包收发线程已结束')
 
-def printHelp():
+def printHelp(): # 格式化输出本地与远控命令说明
 	local_help = {
 	'lu ':' 列出所有用户信息',
 	'ru [UserID] ':' 移除指定ID的用户',
@@ -184,7 +185,9 @@ def printHelp():
 	del local_help
 	del remote_help
 
-def remoteCtrl():
+def remoteCtrl(): # 建立远控TCP长连接并进入命令和客户端返回值的收发循环 分析处理远程控制客户端的命令
+	global CTRL_USER_ID
+
 	host_port = ('127.0.0.1', 5682)
 	rc_sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 	rc_sock.settimeout(5)
@@ -192,27 +195,29 @@ def remoteCtrl():
 	rc_sock.listen(1)
 	try:
 		user, _ = rc_sock.accept()
-		print(user.recv(1024).decode('utf-8'))
+		print('[INFO]', user.recv(1024).decode('utf-8')) # 显示来自客户端的招呼消息
 		while True:
 			serv_msg = input('User> ')
-			if serv_msg == 'q':
-				user.sendall('q')
+			if serv_msg == 'q': # 发送 q 代表停止远控并断开链接
+				user.sendall('q'.encode('utf-8'))
 				rc_sock.close()
 				break
 			user.send(serv_msg.encode('utf-8'))
 			user_msg = user.recv(20480).decode('utf-8')
-			print(user_msg)
+			print('[RECV]', user_msg)
 	except Exception as e:
-		print('[ERRO] 链接发生异常', repr(e))
+		print('[ERRO] 链接发生异常', e)
 		rc_sock.close()
 
-def localCommand(cmd):
+	CTRL_USER_ID = None
+	
+def localCommand(cmd): # 用于分析处理本地命令
 	global CTRL_USER_ID
 	global LISTENING
 	global UDE
 
-	cmd_list = cmd.split(' ')
-	if len(cmd_list) == 1:
+	cmd_list = cmd.split(' ') # 用空格分隔参数 对参数有排序要求
+	if len(cmd_list) == 1: # 根据参数的数量对命令进行归类
 		if cmd_list[0] == 'qt':
 			LISTENING = False
 			print("[INFO] 正在结束所有子线程并退出")
@@ -239,9 +244,8 @@ def localCommand(cmd):
 			print('[INFO] 将ID为', cmd_list[1], '的用户移出数据结构')
 			UDE.removeUser(cmd_list[1])
 		elif cmd_list[0] == 'cu':
-			print('[INFO] 将向ID为', cmd_list[1], '的用户发出控制请求')
 			CTRL_USER_ID = cmd_list[1]
-			remoteCtrl()
+			remoteCtrl() # 内部调用了此函数进入远控命令循环
 		else:
 			print('[ERRO] 无效的本地操作指令')
 
@@ -266,6 +270,7 @@ heartBeatThread.setDaemon(False)
 heartBeatThread.start()
 time.sleep(0.1)
 
+# 主线程循环
 while True:
 	cmd = input('Local> ')
 	localCommand(cmd)

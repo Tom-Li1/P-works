@@ -7,7 +7,8 @@ import uuid
 import sys
 import threading
 # 占用资源：所在目录下创建UUID.json用于储存此用户的ID码
-# 端口使用：5681-udp-心跳包收发
+# 端口使用：5681-UDP-心跳包收发 5682-TCP-远程控制通讯 5683-TCP-文件传输
+# 命名规则：函数-xxxXxx 类-XxxXxx 局部变量-xxx_xxx 全局变量-XXXXXX
 
 def isUuidOK(file_name, file_path): # 判断UUID储存文件是否存在且完整 返回True或False
 	if os.path.exists(file_path + file_name) == False:
@@ -50,23 +51,26 @@ class HeartBeatController(): # 用于接收/回复/辨别来自服务端心跳�
 	def __init__(self, user_ID):
 		print('[INFO] 心跳包收发类初始化......')
 		self.user_ID = user_ID
-		self.HOST_PORT = ('127.0.0.1', 5681)
-		self.BUFSIZE = 1024
+		self.host_port = ('127.0.0.1', 5681)
+		self.bufsize = 1024
 		self.hb_sock = socket.socket(socket.AF_INET,socket.SOCK_DGRAM)
 		self.hb_sock.settimeout(10)
 		print('[INFO] 心跳包收发类初始化完成')
 
-	def sendHb(self):
+	def sendHb(self, ctrl_reply = False):
 		try:
-			self.hb_sock.sendto(self.user_ID.encode("utf-8"), self.HOST_PORT)
-			print('[INFO] 已向服务器发送心跳包')
+			if ctrl_reply == False:
+				self.hb_sock.sendto(self.user_ID.encode("utf-8"), self.host_port)
+				print('[INFO] 已向服务器发送心跳包')
+			else:
+				self.hb_sock.sendto((self.user_ID + 'R').encode("utf-8"), self.host_port)
 		except Exception as e:
 			print('[ERRO] 心跳包发送失败', e)
 
 
 	def recvHb(self):
 		try:
-			serv_msg, _ = self.hb_sock.recvfrom(self.BUFSIZE)
+			serv_msg, _ = self.hb_sock.recvfrom(self.bufsize)
 			print('[INFO] 收到服务器响应')
 			if serv_msg.decode('utf-8') == "c":
 				print('[INFO] 收到服务器控制请求')
@@ -81,13 +85,33 @@ class HeartBeatController(): # 用于接收/回复/辨别来自服务端心跳�
 		self.hb_sock.close()
 		print('[INFO] 心跳包发送套接字已关闭')
 
-hbc = HeartBeatController(UUID())
-while True:
-	hbc.sendHb()
-	if hbc.recvHb() == True:
-		print('[INFO] 已转入控制模式')
+def remoteCtrl():
+	rc_sock = socket(AF_INET, SOCK_STREAM)
+	rc_sock.settimeout(5)
+	try:
+		rc_sock.connect(('127.0.0.1', 5682))
+		rc_sock.sendall((socket.gethostname() + ' Ready.').encode('utf-8'))
 		while True:
-			if input('>>>') == 'q':
-				print('[INFO] 已退出控制模式')
-				break
-	time.sleep(6)
+			sevr_data = rc_sock.recv(10240).decode('utf-8')
+			print(sevr_data)
+			if sevr_data == 'q':
+				rc_sock.close()
+				print('[INFO] TCP远控连接已关闭')
+				return None
+			rc_sock.sendall((sevr_data + ' reply').encode('utf-8'))
+	except:
+		print('[ERRO] 远控TCP链接发生异常 已关闭')
+		traceback.print_exc()
+		rc_sock.close()
+
+
+HBC = HeartBeatController(UUID())
+while True:
+	HBC.sendHb()
+	if HBC.recvHb() == True:
+		time.sleep(0.5)
+		HBC.sendHb(ctrl_reply = True)
+		print('[INFO] 已应答服务器的控制请求')
+		time.sleep(0.5)
+		remoteCtrl()
+	time.sleep(5)

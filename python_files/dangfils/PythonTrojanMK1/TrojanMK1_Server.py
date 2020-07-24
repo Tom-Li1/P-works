@@ -30,7 +30,7 @@ class UserDataEditor(): # 参数包含文件名与路径 可自定义 默认当�
 		self.file_name = file_name
 		# 若文件不存在则新建
 		if os.path.exists(self.file_path + self.file_name) == False:
-			print('[ERRO] 用户数据文件不存在 即将新建文件')
+			print('[WARNING] 用户数据文件不存在 即将新建文件')
 			file = open(self.file_path + self.file_name, mode = 'w')
 			json.dump({}, file)
 			file.close()
@@ -44,7 +44,7 @@ class UserDataEditor(): # 参数包含文件名与路径 可自定义 默认当�
 				data_file.close()
 			print('[INFO] 用户数据读取成功')
 		except Exception as e:
-			print('[ERRO] 用户数据读取失败', e)
+			print('[ERROR] 用户数据文件内容读取至内存时出错', e)
 
 	def addUser(self, user_ID):
 		# 向内存中的数据结构添加用户 不写入文件
@@ -55,17 +55,17 @@ class UserDataEditor(): # 参数包含文件名与路径 可自定义 默认当�
 			else:
 				self.user_data[user_ID][0] = t1me
 		except:
-			print('[ERRO] 添加用户至数据结构失败 反馈如下')
+			print('[ERROR] 添加用户至数据结构失败 反馈如下')
 			traceback.print_exc()
 
 	def removeUser(self, user_ID): # 从内存中的数据结构移除用户 不写入文件
 		try:
 			if user_ID not in self.user_data:
-				print('[ERRO] 删除用户失败 数据结构中无此ID的用户')
+				print('[ERROR] 删除用户失败 数据结构中无此ID的用户')
 			else:
 				del self.user_data[user_ID]
 		except:
-			print('[ERRO] 移除用户失败 反馈如下')
+			print('[ERROR] 移除用户失败 反馈如下')
 			traceback.print_exc()
 
 	def resetData(self): # 打开文件 清空用户数据 关闭文件
@@ -85,7 +85,7 @@ class UserDataEditor(): # 参数包含文件名与路径 可自定义 默认当�
 				json.dump(self.user_data, data_file)
 				data_file.close()
 		except:
-			print('[ERRO] 写入用户数据至文件失败 反馈如下')
+			print('[ERROR] 写入用户数据至文件失败 反馈如下')
 			traceback.print_exc()
 
 	def showDataContent(self): # 格式化输出内存中用户数据结构的内容至命令行 不读取文件
@@ -105,14 +105,14 @@ class UserDataEditor(): # 参数包含文件名与路径 可自定义 默认当�
 	def setUserNickname(self, user_ID, nickname): # 为用户指定备注
 		try:
 			if user_ID not in self.user_data:
-				print('[ERRO] 设置备注失败 数据结构中无此ID的用户')
+				print('[WARNING] 数据结构中无此ID的用户')
 			elif len(nickname) > 15 or len(nickname) == 0:
-				print('[ERRO] 设置备注失败 用户备注需要1-15个字符')
+				print('[WARNING] 用户备注需要1-15个字符')
 			else:
 				self.user_data[user_ID][1] = nickname
 				print('[INFO] 已将ID为', user_ID, '的用户备注设置为', nickname)
 		except:
-			print('[ERRO] 设置备注失败 反馈如下')
+			print('[ERROR] 设置备注失败 反馈如下')
 			traceback.print_exc()
 
 def listen_heartbeat(): # 子线程 心跳包接收以及接入控制用户函数
@@ -140,14 +140,14 @@ def listen_heartbeat(): # 子线程 心跳包接收以及接入控制用户函�
 				print('[INFO] 已向ID为', CTRL_USER_ID, '的用户发起控制请求')
 				CTRL_USER_ID = None # 发起请求并重置将要抓取的ID
 			except Exception as e:
-				print('[ERRO] 发起控制请求失败', e)
+				print('[CRITICAL] 发起控制请求失败', e)
 		elif data[-1] == 'R': # 结尾为 R 的用户ID为此用户的设备接入控制许可
 			print('[INFO] 收到ID为', data[:-1], '的控制请求许可')
 		else:
 			try:
 				hb_sock.sendto('h'.encode('utf-8'), addr) # 发送 h 代表普通的来自服务器的响应
 			except Exception as e:
-				print('[ERRO] 回复心跳包失败', e)
+				print('[ERROR] 回复心跳包失败', e)
 		if data[-1] != 'R': # 结尾为R的ID为接入控制许可 不需要添加至用户数据结构
 			UDE.addUser(user_ID = data)
 			UDE.writeUserData()
@@ -201,12 +201,17 @@ def remoteCtrl(): # 建立远控TCP长连接并进入命令和客户端返回值
 			if serv_msg == 'q': # 发送 q 代表停止远控并断开链接
 				user.sendall('q'.encode('utf-8'))
 				rc_sock.close()
+				print('[INFO] TCP远控链接已关闭')
 				break
 			user.send(serv_msg.encode('utf-8'))
 			user_msg = user.recv(20480).decode('utf-8')
-			print('[RECV]', user_msg)
-	except Exception as e:
-		print('[ERRO] 链接发生异常', e)
+			print('[INFO] 收到客户端回复：', user_msg)
+	except socket.timeout:
+		print('[CRITICAL] 正在控制的客户端未能及时响应命令 链接已关闭')
+		rc_sock.close()
+	except:
+		print('[CRITICAL] TCP链接发生异常 链接已关闭')
+		traceback.print_exc()
 		rc_sock.close()
 
 	CTRL_USER_ID = None
@@ -221,6 +226,7 @@ def localCommand(cmd): # 用于分析处理本地命令
 		if cmd_list[0] == 'qt':
 			LISTENING = False
 			print("[INFO] 正在结束所有子线程并退出")
+			time.sleep(5)
 			sys.exit()
 		elif cmd_list[0] == 'lu':
 			UDE.showDataContent()
@@ -235,11 +241,11 @@ def localCommand(cmd): # 用于分析处理本地命令
 		elif cmd_list[0] == 'hp':
 			printHelp()
 		else:
-			print('[ERRO] 无效的本地操作指令')
+			print('[WARNING] 无效的本地操作指令')
 
 	elif len(cmd_list) == 2:
 		if cmd_list[1] not in UDE.user_data:
-				print('[ERRO] 此用户ID不存在')
+				print('[WARNING] 此用户ID不存在')
 		elif cmd_list[0] == 'ru':
 			print('[INFO] 将ID为', cmd_list[1], '的用户移出数据结构')
 			UDE.removeUser(cmd_list[1])
@@ -247,16 +253,16 @@ def localCommand(cmd): # 用于分析处理本地命令
 			CTRL_USER_ID = cmd_list[1]
 			remoteCtrl() # 内部调用了此函数进入远控命令循环
 		else:
-			print('[ERRO] 无效的本地操作指令')
+			print('[WARNING] 无效的本地操作指令')
 
 	elif len(cmd_list) == 3:
 		if cmd_list[0] == 'sn':
 			UDE.setUserNickname(cmd_list[1], cmd_list[2])
 		else:
-			print('[ERRO] 无效的本地操作指令')
+			print('[WARNING] 无效的本地操作指令')
 
 	else:
-		print('[ERRO] 无效的本地操作指令')
+		print('[WARNING] 无效的本地操作指令')
 
 
 # 创建本地用户信息编辑类对象
@@ -266,7 +272,7 @@ time.sleep(0.1)
 LISTENING = True
 CTRL_USER_ID = None
 heartBeatThread = threading.Thread(target=listen_heartbeat)
-heartBeatThread.setDaemon(False)
+heartBeatThread.setDaemon(True)
 heartBeatThread.start()
 time.sleep(0.1)
 

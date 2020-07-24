@@ -12,7 +12,7 @@ import threading
 
 def isUuidOK(file_name, file_path): # 判断UUID储存文件是否存在且完整 返回True或False
 	if os.path.exists(file_path + file_name) == False: # 先用exists()核实文件是否存在
-		print('[ERRO] UUID储存文件不存在')
+		print('[WARNING] UUID储存文件不存在')
 		return False
 	else:
 		try:
@@ -20,13 +20,13 @@ def isUuidOK(file_name, file_path): # 判断UUID储存文件是否存在且完�
 				content = json.load(uuid_file)
 				uuid_file.close()
 				if 'uuid' not in content or 'complete' not in content or content['complete'] != '0x00012c':
-					print('[ERRO] UUID储存文件不完整') # 内容缺一不可
+					print('[WARNING] UUID储存文件不完整') # 内容缺一不可
 					return False
 				else:
 					print('[INFO] UUID文件存在并完整')
 					return True
 		except:
-			print('[ERRO] 验证文件可用性时出错')
+			print('[WARNING] 验证文件可用性时出错 信息如下')
 			traceback.print_exc()
 			return False
 
@@ -65,8 +65,7 @@ class HeartBeatController(): # 用于接收/回复/辨别来自服务端心跳�
 			else:
 				self.hb_sock.sendto((self.user_ID + 'R').encode("utf-8"), self.host_port) # 在UUID末尾加 R 便是许可
 		except Exception as e:
-			print('[ERRO] 心跳包发送失败', e)
-
+			print('[ERROR] 心跳包发送失败', e)
 
 	def recvHb(self): # 接收并分析心跳包返回布尔值 收到 c 代表服务器的接入请求 其他为来自服务器的普通响应
 		try:
@@ -78,8 +77,10 @@ class HeartBeatController(): # 用于接收/回复/辨别来自服务端心跳�
 			else:
 				return False
 		except Exception as e:
-			print('[ERRO] 服务器未响应', e)
+			print('[WARNING] 接收心跳包反馈时', e)
 			return False
+		except socket.timeout:
+			print('[WARNING] 服务器未及时响应心跳包')
 
 
 	def shutDown(self): # 关闭心跳包收发套接字
@@ -98,14 +99,14 @@ def remoteCtrl(HeartBeatController): # 与服务器建立TCP链接 接收处理�
 		rc_sock.settimeout(300)
 		while True:
 			sevr_data = rc_sock.recv(10240).decode('utf-8')
-			print('[RECV]', sevr_data)
+			print('[INFO] 接收服务器请求：', sevr_data)
 			if sevr_data == 'q':
 				rc_sock.close() # 收到 q 为手动关闭链接
 				print('[INFO] TCP远控连接已关闭')
 				return None
 			rc_sock.sendall((sevr_data + ' reply').encode('utf-8'))
 	except:
-		print('[ERRO] 远控TCP链接发生异常 已关闭')
+		print('[CRITICAL] 远控TCP链接发生异常 已关闭')
 		traceback.print_exc()
 		rc_sock.close()
 

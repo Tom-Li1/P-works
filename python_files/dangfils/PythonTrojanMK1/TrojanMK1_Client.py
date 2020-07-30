@@ -179,32 +179,31 @@ class RemoteCtrlFunctions():
 				# 意料之外的错误 错误代码07 附加反馈
 				return ['ERROR_CODE', '07', traceback.format_exc()]
 
-	def copyFile(self, source_file, destination_file_or_path):
+	def moveOrCopyFileOrDir(self, src_file_or_path, dst_file_or_path, operate_mode):
 		# 若第二个参数为文件，复制source_file内容至此文件
 		# 若为文件夹，复制source_file的内容至文件夹内的同名文件
 		# 此方法强制使用绝对路径
-		if os.path.exists(source_file) == False:
-			# 源文件不存在 错误代码08
+		if os.path.exists(src_file_or_path) == False:
+			# 源文件或目录不存在 错误代码08
 			return ['ERROR_CODE', '08', None]
-		elif os.path.split(source_file)[1] == '':
-			# 源文件不能为目录 错误代码09
-			return ['ERROR_CODE', '09', None]
-		elif (destination_fileORpath[-1] == '\\' or destination_fileORpath[-1] == '/') and \
-		 os.path.exists(destination_fileORpath) == False:
-			# 目标目录不存在 错误代码10
-			return ['ERROR_CODE', '10', None]
-		else:
+
+		if operate_mode == 'copy':
+			# 复制文件或目录
 			try:
-				shutil.copy(source_file, destination_file_or_path)
-			except:
-				# 复制文件时的无法捕捉的错误 错误代码11 附加反馈
-				return ['ERROR_CODE', '11', traceback.format_exc()]
+				# 对不同类型的源采取针对性函数
+				if os.path.isfile(src_file_or_path):
+					shutil.copy(src_file_or_path, dst_file_or_path)
+				elif os.path.isdir(src_file_or_path):
+					shutil.copytree(src_file_or_path, dst_file_or_path)
+			except Exception as e:
+				# 复制文件或目录时发生的错误 错误代码09
+				return ['ERROR_CODE', '09', str(e.__class__.__name__) + ' ' + str(e)]
 
-
-
-
-
-
-
-
-
+		elif operate_mode == 'move':
+			# 剪切文件或目录
+			try:
+				# move函数不讲究源的类型
+				shutil.move(src_file_or_path, dst_file_or_path)
+			except Exception as e:
+				# 剪切文件或目录的错误 错误代码10
+				return ['ERROR_CODE', '10', str(e.__class__.__name__) + ' ' + str(e)]

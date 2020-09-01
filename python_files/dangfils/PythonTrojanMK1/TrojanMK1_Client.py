@@ -88,8 +88,8 @@ def UUID(): # 用于操作储存UUID文件的函数 内部调用isUuidOK()
 			print('[INFO] UUID文件读取完成')
 			return content['uuid']
 
-def remoteCtrl(HeartBeatController): # 与服务器建立TCP链接 接收处理命令 发送返回值 接收HBC类参数用于完全退出此程序
-	global HBC
+def remoteCtrl(): # 与服务器建立TCP链接 接收处理命令 发送返回值
+	global HBC # 调用全局变量HBC(HeartBeatController类)用于完全退出
 
 	rc_sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 	rc_sock.settimeout(5) # 五秒内无法链接服务器则关闭套接字

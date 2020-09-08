@@ -1,5 +1,5 @@
-import os, shutil
-
+import os, shutil, time, itertools
+'''
 def moveOrCopyFileOrDir(src_file_or_path, dst_file_or_path, operate_mode):
 		# 若第二个参数为文件，复制source_file内容至此文件
 		# 若为文件夹，复制source_file的内容至文件夹内的同名文件
@@ -39,3 +39,16 @@ while True:
 	else:
 		print('ERROR_CODE-' + rt[1])
 		print(rt[2])
+'''
+PLAY_ANIMATION = False
+def showAnimation(text):
+	global PLAY_ANIMATION
+
+	for icon in itertools.cycle('-\\|/'):
+		if PLAY_ANIMATION:
+			print('\r' + '[INFO]', text, icon, end='')
+			time.sleep(0.2)
+		else:
+			break
+
+showAnimation('Fucking...')

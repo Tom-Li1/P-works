@@ -91,7 +91,7 @@ class UserDataEditor(): # 参数包含文件名与路径 可自定义 默认当�
 	def showDataContent(self): # 格式化输出内存中用户数据结构的内容至命令行 不读取文件
 		print('{:=^84}'.format('用户信息表单'))
 		if self.user_data == {}:
-			print('\n{:^75}\n'.format('无用户信息'))
+			print('\n{:^84}\n'.format('无用户信息'))
 		else:
 			print('{0:^40}{1:^25}{2:^10}{3:^15}'.format("User's UUID", 'Last Online Time', 'State', 'Nickname'))
 			for uuid, data in self.user_data.items():
@@ -155,6 +155,108 @@ def listen_heartbeat(): # 子线程 心跳包接收以及接入控制用户函�
 	hb_sock.close()
 	print('[INFO] 心跳包收发线程已结束')
 
+def remoteCtrl(): # 建立远控TCP长连接并进入命令和客户端返回值的收发循环 分析处理远程控制客户端的命令
+	global CTRL_USER_ID
+
+	host_port = ('127.0.0.1', 5682)
+	rc_sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+	rc_sock.settimeout(5)
+	rc_sock.bind(host_port)
+	rc_sock.listen(1)
+	try:
+		user, _ = rc_sock.accept()
+		print('[INFO]', user.recv(1024).decode('utf-8')) # 显示来自客户端的招呼消息
+		time.sleep(0.1)
+		while True:
+			serv_msg = input('User> ')
+			if serv_msg == 'q': # 发送 q 代表停止远控并断开链接
+				user.sendall('q'.encode('utf-8'))
+				rc_sock.close()
+				print('[INFO] TCP远控链接已关闭')
+				break
+			user.send(serv_msg.encode('utf-8'))
+			user_msg = user.recv(20480).decode('utf-8')
+			print('[INFO] 收到客户端回复：', user_msg)
+	except socket.timeout:
+		print('[CRITICAL] 客户端无响应 链接已关闭')
+		rc_sock.close()
+	except:
+		print('[CRITICAL] TCP链接发生异常 链接已关闭')
+		traceback.print_exc()
+		rc_sock.close()
+
+	CTRL_USER_ID = None
+
+def returnUUID(uuid_or_nickname):
+	global UDE
+
+	if uuid_or_nickname in UDE.user_data:
+		return uuid_or_nickname
+	else:
+		for uu1d, info_list in UDE.user_data.items():
+			if uuid_or_nickname == info_list[1]:
+				return uu1d
+	return None
+
+def localCommand(cmd): # 用于分析处理本地命令
+	global CTRL_USER_ID
+	global LISTENING
+	global UDE
+
+	cmd_list = cmd.split(' ') # 用空格分隔参数 对参数有排序要求
+	if cmd_list == ['']:
+		pass
+	elif len(cmd_list) == 1: # 根据参数的数量对命令进行归类
+		if cmd_list[0] == 'qt':
+			LISTENING = False
+			print("[INFO] 正在结束所有子线程并退出")
+			time.sleep(3.5)
+			sys.exit()
+		elif cmd_list[0] == 'lu':
+			UDE.showDataContent()
+		elif cmd_list[0] == 'rd':
+			UDE.resetData()
+		elif cmd_list[0] == 'ld':
+			print('[INFO] 将文件内容读取至数据结构')
+			UDE.loadUserData()
+		elif cmd_list[0] == 'wd':
+			print('[INFO] 将用户数据结构写入文件')
+			UDE.writeUserData()
+		elif cmd_list[0] == 'hp':
+			printHelp()
+		else:
+			print('[WARNING] 无效的本地操作指令')
+
+	elif len(cmd_list) == 2:
+		if cmd_list[0] == 'ru':
+			user_id = returnUUID(cmd_list[1])
+			if user_id == None:
+				print('[WARNING] 未找到匹配的ID或Nickname')
+			else:
+				UDE.removeUser(user_id)
+				print('[INFO] 已将ID为', user_id, '的用户移出数据结构')
+
+		elif cmd_list[0] == 'cu':
+			user_id = returnUUID(cmd_list[1])
+			if user_id == None:
+				print('[WARNING] 未找到匹配的ID或Nickname')
+			else:
+				print('[INFO] Accessing control to', user_id + '. Pls wait...')
+				CTRL_USER_ID = user_id
+				remoteCtrl() # 内部调用了此函数进入远控命令循环
+
+		else:
+			print('[WARNING] 无效的本地操作指令')
+
+	elif len(cmd_list) == 3:
+		if cmd_list[0] == 'sn':
+			UDE.setUserNickname(cmd_list[1], cmd_list[2])
+		else:
+			print('[WARNING] 无效的本地操作指令')
+
+	else:
+		print('[WARNING] 无效的本地操作指令')
+
 def printHelp(): # 格式化输出本地与远控命令说明
 	local_help = {
 	'lu ':' 列出所有用户信息',
@@ -185,92 +287,13 @@ def printHelp(): # 格式化输出本地与远控命令说明
 	del local_help
 	del remote_help
 
-def remoteCtrl(): # 建立远控TCP长连接并进入命令和客户端返回值的收发循环 分析处理远程控制客户端的命令
-	global CTRL_USER_ID
-
-	host_port = ('127.0.0.1', 5682)
-	rc_sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-	rc_sock.settimeout(5)
-	rc_sock.bind(host_port)
-	rc_sock.listen(1)
-	try:
-		user, _ = rc_sock.accept()
-		print('[INFO]', user.recv(1024).decode('utf-8')) # 显示来自客户端的招呼消息
-		while True:
-			serv_msg = input('User> ')
-			if serv_msg == 'q': # 发送 q 代表停止远控并断开链接
-				user.sendall('q'.encode('utf-8'))
-				rc_sock.close()
-				print('[INFO] TCP远控链接已关闭')
-				break
-			user.send(serv_msg.encode('utf-8'))
-			user_msg = user.recv(20480).decode('utf-8')
-			print('[INFO] 收到客户端回复：', user_msg)
-	except socket.timeout:
-		print('[CRITICAL] 正在控制的客户端未能及时响应命令 链接已关闭')
-		rc_sock.close()
-	except:
-		print('[CRITICAL] TCP链接发生异常 链接已关闭')
-		traceback.print_exc()
-		rc_sock.close()
-
-	CTRL_USER_ID = None
-	
-def localCommand(cmd): # 用于分析处理本地命令
-	global CTRL_USER_ID
-	global LISTENING
-	global UDE
-
-	cmd_list = cmd.split(' ') # 用空格分隔参数 对参数有排序要求
-	if len(cmd_list) == 1: # 根据参数的数量对命令进行归类
-		if cmd_list[0] == 'qt':
-			LISTENING = False
-			print("[INFO] 正在结束所有子线程并退出")
-			time.sleep(5)
-			sys.exit()
-		elif cmd_list[0] == 'lu':
-			UDE.showDataContent()
-		elif cmd_list[0] == 'rd':
-			UDE.resetData()
-		elif cmd_list[0] == 'ld':
-			print('[INFO] 将文件内容读取至数据结构')
-			UDE.loadUserData()
-		elif cmd_list[0] == 'wd':
-			print('[INFO] 将用户数据结构写入文件')
-			UDE.writeUserData()
-		elif cmd_list[0] == 'hp':
-			printHelp()
-		else:
-			print('[WARNING] 无效的本地操作指令')
-
-	elif len(cmd_list) == 2:
-		if cmd_list[1] not in UDE.user_data:
-				print('[WARNING] 此用户ID不存在')
-		elif cmd_list[0] == 'ru':
-			print('[INFO] 将ID为', cmd_list[1], '的用户移出数据结构')
-			UDE.removeUser(cmd_list[1])
-		elif cmd_list[0] == 'cu':
-			CTRL_USER_ID = cmd_list[1]
-			remoteCtrl() # 内部调用了此函数进入远控命令循环
-		else:
-			print('[WARNING] 无效的本地操作指令')
-
-	elif len(cmd_list) == 3:
-		if cmd_list[0] == 'sn':
-			UDE.setUserNickname(cmd_list[1], cmd_list[2])
-		else:
-			print('[WARNING] 无效的本地操作指令')
-
-	else:
-		print('[WARNING] 无效的本地操作指令')
-
-
 # 创建本地用户信息编辑类对象
 UDE = UserDataEditor()
 time.sleep(0.1)
-# 设定必要变量并创建心跳包收发子线程
+# 设定必要全局变量
 LISTENING = True
 CTRL_USER_ID = None
+#创建心跳包收发子线程
 heartBeatThread = threading.Thread(target=listen_heartbeat)
 heartBeatThread.setDaemon(True)
 heartBeatThread.start()

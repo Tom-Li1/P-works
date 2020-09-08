@@ -120,7 +120,7 @@ while True:
 		HBC.sendHb(ctrl_reply = True)
 		print('[INFO] 已应答服务器的控制请求')
 		time.sleep(0.5)
-		remoteCtrl(HBC)
+		remoteCtrl()
 	time.sleep(5)
 
 
@@ -152,7 +152,7 @@ class RemoteCtrlFunctions():
 			except: # 发生无法捕捉确定的错误 错误代码03 附加反馈
 				return ['ERROR_CODE', '03', traceback.format_exc()]
 
-	def editFile(self, file, open_mode, operate_mode, ecding = 'utf-8', content):
+	def editFile(self, file, open_mode, operate_mode, ecding = 'utf-8', content = ''):
 		# 用于编辑文件 file为文件绝对路径加文件名 open_mode为打开文件的模式 
 		# operate_mode为操作模式('read'和'write') content为对文件进行写入操作的内容
 		# ecding为文件读取时的解码方式

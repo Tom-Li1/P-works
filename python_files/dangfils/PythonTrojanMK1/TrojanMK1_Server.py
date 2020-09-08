@@ -91,7 +91,7 @@ class UserDataEditor(): # 参数包含文件名与路径 可自定义 默认当�
 	def showDataContent(self): # 格式化输出内存中用户数据结构的内容至命令行 不读取文件
 		print('{:=^84}'.format('用户信息表单'))
 		if self.user_data == {}:
-			print('\n{:^75}\n'.format('数据结构中未储存任何用户信息'))
+			print('\n{:^75}\n'.format('无用户信息'))
 		else:
 			print('{0:^40}{1:^25}{2:^10}{3:^15}'.format("User's UUID", 'Last Online Time', 'State', 'Nickname'))
 			for uuid, data in self.user_data.items():

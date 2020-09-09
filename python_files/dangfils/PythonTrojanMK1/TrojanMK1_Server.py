@@ -287,6 +287,21 @@ def printHelp(): # 格式化输出本地与远控命令说明
 	del local_help
 	del remote_help
 
+def showLogo():
+	logo = r'''
+        |\ |\
+        \ \| |
+         \ | |
+       .--.. /
+      /o     \
+      \      /
+      {>o<}='    TrojanMK1_beta
+
+      '''
+	print(logo)
+	del logo
+
+showLogo()
 # 创建本地用户信息编辑类对象
 UDE = UserDataEditor()
 time.sleep(0.1)
